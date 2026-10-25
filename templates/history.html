@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+
+{% block title %}PhishGuard | History{% endblock %}
+
+{% block content %}
+<section class="history-header">
+  <div>
+    <div class="eyebrow">Dashboard</div>
+    <h1>Analysis History</h1>
+  </div>
+  <form method="post" action="{{ url_for('clear_history') }}">
+    <input type="hidden" name="csrf_token" value="{{ session.get('csrf_token') or '' }}" />
+    <button type="submit" class="danger-button">Clear History</button>
+  </form>
+</section>
+
+<section class="stats-grid">
+  <article class="metric-card">
+    <h3>Total URLs analyzed</h3>
+    <p>{{ stats.total_urls }}</p>
+  </article>
+  <article class="metric-card danger">
+    <h3>Potential phishing</h3>
+    <p>{{ stats.phishing_count }}</p>
+  </article>
+  <article class="metric-card success">
+    <h3>Likely legitimate</h3>
+    <p>{{ stats.legitimate_count }}</p>
+  </article>
+</section>
+
+<section class="chart-card">
+  <canvas id="historyChart" width="900" height="300"></canvas>
+</section>
+
+<section class="history-table-wrap">
+  <table class="history-table">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>URL</th>
+        <th>Result</th>
+        <th>Prediction confidence</th>
+        <th>P(phishing)</th>
+        <th>Heuristic risk</th>
+        <th>Time</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% if history %}
+        {% for item in history %}
+          <tr>
+            <td>{{ item.id }}</td>
+            <td>{{ item.url }}</td>
+            <td>{{ item.predicted_label }}</td>
+            <td>{% if item.confidence is not none %}{{ '%.2f' % (item.confidence * 100) }}%{% else %}N/A{% endif %}</td>
+            <td>{% if item.phishing_probability is not none %}{{ '%.2f' % (item.phishing_probability * 100) }}%{% else %}N/A{% endif %}</td>
+            <td>{{ item.risk_score }}{% if item.risk_score_version < 2 %} (legacy){% endif %}</td>
+            <td>{{ item.created_at }}</td>
+          </tr>
+        {% endfor %}
+      {% else %}
+        <tr>
+          <td colspan="7">No analysis history yet. Run an analysis from the home page.</td>
+        </tr>
+      {% endif %}
+    </tbody>
+  </table>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  const chartCtx = document.getElementById('historyChart');
+  if (chartCtx) {
+    new Chart(chartCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Likely Legitimate', 'Potential Phishing'],
+        datasets: [{
+          label: 'Analysis distribution',
+          data: [{{ stats.legitimate_count }}, {{ stats.phishing_count }}],
+          backgroundColor: ['#39c37a', '#db4a4a']
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { beginAtZero: true, precision: 0 }
+        }
+      }
+    });
+  }
+</script>
+{% endblock %}

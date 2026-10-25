@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+
+{% block title %}PhishGuard | Privacy & Disclaimer{% endblock %}
+
+{% block content %}
+<section class="content-card">
+  <div class="eyebrow">Privacy & disclaimer</div>
+  <h1>Privacy and security notice</h1>
+  <p>
+    PhishGuard analyzes URLs locally in the browser’s request flow and on the server without visiting or executing the submitted destination. It does not request login credentials, cookies, or personal account information.
+  </p>
+  <p>
+    The application stores only analysis metadata in a local SQLite database. This includes the submitted URL, the result label, confidence values, a risk score, and the time of analysis. No passwords, browser cookies, or sensitive user accounts are stored.
+  </p>
+  <p>
+    This tool is designed for educational use and should not be treated as a guarantee of website legitimacy. A phishing detector can produce false positives or false negatives, and users should confirm suspicious links through official communication channels when handling credentials or financial information.
+  </p>
+</section>
+{% endblock %}

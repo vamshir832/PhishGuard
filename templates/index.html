@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+
+{% block title %}PhishGuard | Home{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-copy">
+    <div class="eyebrow">Cybersecurity Intelligence</div>
+    <h1>Detect suspicious URLs before they fool your users.</h1>
+    <p>
+      Phishing attacks often use fake domains, misleading hostnames, and impersonation tactics to steal credentials and sensitive information.
+      PhishGuard analyzes URL structure and patterns to flag suspicious behavior before a user clicks.
+    </p>
+    <div class="hero-actions">
+      <a class="secondary-link" href="{{ url_for('how_it_works') }}">Learn how it works</a>
+    </div>
+  </div>
+
+  <div class="url-card">
+    <div class="card-header">
+      <span class="status-pill">Offline URL analysis</span>
+    </div>
+
+    <form method="post" action="{{ url_for('analyze') }}" class="analyze-form" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ session.get('csrf_token') or '' }}" />
+      <label for="urlInput">Website URL</label>
+      <div class="input-row">
+        <input id="urlInput" name="url" type="text" placeholder="https://example.com or login-secure-bank.com" autocomplete="off" />
+        <button type="submit" class="primary-button">Analyze URL</button>
+      </div>
+      <div class="inline-status" id="formStatus" aria-live="polite"></div>
+      <div class="sample-list">
+        <span>Sample URLs:</span>
+        {% for sample in sample_urls %}
+          <button type="button" class="sample-link" data-url="{{ sample }}">{{ sample }}</button>
+        {% endfor %}
+      </div>
+    </form>
+  </div>
+</section>
+
+<section class="notice">
+  <strong>Security disclaimer:</strong>
+  This tool analyzes URL structure and model features only. It does not visit or execute suspicious websites. No detector can provide absolute certainty,
+  and users should verify links through official channels when handling sensitive data.
+</section>
+
+<section class="dashboard-grid">
+  <article class="metric-card success">
+    <h3>Model status</h3>
+    <p>{{ 'Ready' if model_status.model_loaded else 'Setup required' }}</p>
+    {% if not model_status.model_loaded %}
+      <small>Train the model first using the instructions in the README.</small>
+    {% endif %}
+  </article>
+  <article class="metric-card warning">
+    <h3>Detection focus</h3>
+    <p>Domain impersonation, encoded URLs, suspicious keywords, and manipulated hostnames.</p>
+  </article>
+  <article class="metric-card neutral">
+    <h3>Privacy</h3>
+    <p>Only metadata from the local analysis history is stored in SQLite. No passwords or cookies are recorded.</p>
+  </article>
+</section>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}PhishGuard | How It Works{% endblock %}
+
+{% block content %}
+<section class="content-card">
+  <div class="eyebrow">Detection pipeline</div>
+  <h1>How phishing detection works</h1>
+  <ul class="process-list">
+    <li><strong>1. URL validation:</strong> The system checks whether the URL is well formed and extracts the hostname safely.</li>
+    <li><strong>2. Feature extraction:</strong> Features such as total URL length, number of dots, subdomains, IP addresses, '@' symbols, suspicious keywords, and HTTPS usage are computed.</li>
+    <li><strong>3. Model inference:</strong> A trained Random Forest or Gradient Boosting classifier evaluates the feature set and returns a prediction.</li>
+    <li><strong>4. Explanation and reporting:</strong> The result includes a human-readable explanation and a separate heuristic risk score that is distinct from the model probability.</li>
+  </ul>
+  <p>
+    This approach is useful for identifying structural patterns, but it cannot guarantee the intent or legitimacy of a live website in all scenarios.
+    Users should still check the domain through trusted channels when handling credentials or financial data.
+  </p>
+</section>
+{% endblock %}
