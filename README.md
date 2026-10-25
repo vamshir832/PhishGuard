@@ -1,63 +1,104 @@
-# PhishGuard — Phishing URL Detection System
+# 🛡️ PhishGuard — Phishing URL Detection System
 
-PhishGuard is an educational, local Flask application that extracts URL-only features and uses a trained Scikit-learn model to classify URLs as likely legitimate or potentially phishing. The app never visits submitted destinations. It maintains a local SQLite history with query strings and fragments removed.
+**An educational cybersecurity project that analyzes URL structure to identify potentially suspicious and phishing URLs.**
 
-> A model result is not proof that a website is safe or malicious. URL-only classifiers can produce false positives and false negatives.
+PhishGuard is a Python and Flask web application that uses machine learning and URL-based security features to classify submitted URLs as **Likely Legitimate** or **Potential Phishing**. It provides an explanation of suspicious patterns and maintains a local history of analyses.
 
-## Project abstract and problem statement
+> ⚠️ **Security notice:** A prediction is an estimate, not a guarantee. PhishGuard is an educational project and should not be used as the sole basis for security decisions.
 
-Phishing messages often direct people to URLs crafted to resemble trusted services. PhishGuard explores whether URL structure can help identify suspicious patterns before a person visits a link. Its feature extractor examines the parsed hostname and URL components, and its training pipeline compares Random Forest and Gradient Boosting classifiers.
 
-The project is intended for Computer Networks and Cybersecurity coursework. It demonstrates feature extraction, grouped model evaluation, local storage, web security controls, and user-facing explanations. It is not a production threat-intelligence service.
+## ✨ Features
 
-## Architecture
+- **URL Analysis:** Analyze submitted HTTP and HTTPS URLs without visiting the destination.
+- **Machine Learning:** Uses a trained Scikit-learn classifier to estimate phishing risk.
+- **Suspicious Pattern Detection:** Examines IP-based hostnames, URL shorteners, suspicious keywords, unusual ports, encoding patterns, and hostname structure.
+- **Explainable Results:** Provides reasons that may indicate suspicious URL characteristics.
+- **Risk Indicators:** Displays a heuristic risk score separately from the model's phishing probability.
+- **Analysis History:** Stores local analysis records using SQLite.
+- **Responsive Interface:** Flask templates, HTML, CSS, and JavaScript provide the web interface.
+- **Privacy-Focused Design:** Removes query strings and URL fragments from stored history.
+- **Automated Tests:** Includes Pytest tests and a GitHub Actions workflow.
+- **Windows Launcher:** Includes a batch file for convenient local setup and startup.
 
-- `feature_extraction.py`: strict HTTP(S) URL validation, IDN normalization, hostname-aware features, and the canonical feature order.
-- `train_model.py`: CSV validation and cleaning, grouped train/validation/test split, model selection, held-out evaluation, and Joblib artifacts.
-- `detector.py`: validates model artifacts and schema, predicts the class, calculates phishing probability from class `1` when supported, and separately calculates a feature-only heuristic score.
-- `app.py`: Flask pages, CSRF checks, request-size limits, generic error pages, and analysis rate limiting when bound beyond loopback.
-- `database.py`: parameterized SQLite history storage, query/fragment scrubbing, migration, and retention.
-- `templates/`, `static/`: responsive dashboard and result/history views.
-- `start.py` and `Start PhishGuard.bat`: Windows one-click setup and launch.
+## 🧰 Technology Stack
 
-## Dataset format, provenance, and limitations
-
-Training CSV files must have these columns:
-
-| Column | Content |
+| Technology | Purpose |
 |---|---|
-| `url` | Full URL, or a hostname that can be normalized to HTTPS |
-| `label` | `legitimate`/`0` or `phishing`/`1` (also accepts documented synonyms such as `benign`, `safe`, `malicious`, and `fraud`) |
+| Python | Application and machine-learning logic |
+| Flask | Web application |
+| Scikit-learn | URL classification models |
+| Pandas | Dataset preparation |
+| Joblib | Model artifact storage |
+| SQLite | Local analysis history |
+| HTML, CSS, JavaScript | User interface |
+| Pytest | Automated testing |
+| Git and GitHub Actions | Version control and continuous integration |
 
-No external or real-world phishing dataset is bundled or downloaded by this project. `data/synthetic_urls.csv` is a small, hand-authored synthetic demonstration fixture. It is not a benchmark, has no real-world provenance, and must not be used to claim real-world accuracy. If no real dataset is at `data/phishing_urls.csv`, the default training command explicitly warns that it is using the synthetic demonstration fixture.
+## 🏗️ Project Architecture
 
-For research, obtain a labeled URL dataset from a reputable public source under terms that permit your use, record its publisher, version/date, license, and any preprocessing in your project report, and save it as `data/phishing_urls.csv` or pass its path with `--dataset`. Do not commit real datasets or private URL records.
+```text
+PhishGuard/
+├── app.py                    # Flask application
+├── start.py                  # Setup and launch helper
+├── Start PhishGuard.bat      # Windows launcher
+├── config.py                 # Configuration
+├── database.py               # SQLite history
+├── detector.py               # Prediction and explanations
+├── feature_extraction.py     # URL feature extraction
+├── train_model.py            # Model training and evaluation
+├── requirements.txt          # Python dependencies
+├── data/
+│   ├── README.md
+│   └── synthetic_urls.csv
+├── models/
+│   └── README.md
+├── templates/                # HTML pages
+├── static/
+│   ├── css/
+│   └── js/
+├── tests/                    # Automated tests
+├── .github/workflows/        # GitHub Actions
+├── .env.example
+└── README.md
+```
 
-Training rejects unknown labels, conflicting labels for duplicate normalized URLs, and data missing either class. It skips rows with missing fields or malformed URLs, removes duplicate normalized URLs with consistent labels, and requires at least three independent domain groups per class.
+## ⚙️ Installation and Setup
 
-## Evaluation procedure
+### Requirements
 
-1. Related URLs are grouped by an approximate registrable domain (including common two-level suffix patterns) before splitting; one group cannot appear in multiple partitions.
-2. Reproducible grouped splits allocate approximately 60% of records to training, 20% to validation, and 20% to the untouched test partition. The split seed is searched deterministically until all three partitions contain both classes; training stops with an error if that is impossible.
-3. Random Forest and Gradient Boosting are trained on the training partition. The model is selected using validation F1, with validation recall and accuracy as tie-breakers.
-4. Both selected candidate models are refit on training plus validation data and evaluated on the untouched test groups. Accuracy, precision, recall, F1, and confusion matrices are saved to `models/evaluation_metrics.json`.
+- Windows 10/11, macOS, or Linux
+- Python 3.11 or later
+- Git (optional if downloading the ZIP)
+- Internet access for installing dependencies on first setup
 
-The score shown as **Heuristic risk score** is a separately calculated feature-based 0–100 score; it is not a probability and does not incorporate the model output. **P(phishing)** is the model probability for class `1`, if supported by the estimator. Prediction confidence is the probability of the predicted class. Scores generated from the synthetic fixture are for software demonstration only.
+### Option 1: Quick Start on Windows
 
-Domain grouping is a practical safeguard, not a perfect public-suffix implementation. Dataset duplicates under alternate encodings, URL shorteners, brand variants, or related organizations may still create dependence between records. Report this limitation when discussing model metrics.
+1. Clone the repository:
 
-## Windows 11 one-click setup
+   ```powershell
+   git clone https://github.com/vamshir832/PhishGuard.git
+   cd PhishGuard
+   ```
 
-1. Install Python 3.11 or later and open the project folder.
-2. Double-click `Start PhishGuard.bat` (or run `python start.py` from PowerShell).
-3. On first launch, the launcher creates `.venv`, installs the packages in `requirements.txt`, trains the demonstration model if no valid model artifact exists, starts Flask, and opens `http://127.0.0.1:5000`.
-4. Keep the launcher terminal window open while using the app. Press **Ctrl+C** in that window to stop the server.
+2. Run the launcher:
 
-First launch requires internet access to install Python dependencies. The app itself does not send submitted URLs to a third party.
+   ```powershell
+   python start.py
+   ```
 
-### Manual setup
+   Alternatively, double-click `Start PhishGuard.bat`.
 
-Open PowerShell in the project folder:
+3. The launcher creates a virtual environment, installs dependencies, prepares the model if required, and starts the application.
+
+4. Open the local address in your browser:
+
+   **http://127.0.0.1:5000**
+
+Keep the launcher terminal open while using the application.
+
+### Option 2: Manual Setup
+
+Open a terminal in the project directory and run:
 
 ```powershell
 python -m venv .venv
@@ -67,69 +108,90 @@ python train_model.py
 python app.py
 ```
 
-If PowerShell blocks virtual-environment activation, use this temporary policy for the current PowerShell process and retry activation:
+Then visit http://127.0.0.1:5000.
+
+If PowerShell blocks activation, run this in the current terminal and retry:
 
 ```powershell
 Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
 .\.venv\Scripts\Activate.ps1
 ```
 
-Open `http://127.0.0.1:5000` in a browser. To run the tests:
+## 🧠 How It Works
 
-```powershell
-python -m pytest -q
-```
+1. **Input:** The user submits a URL through the web interface.
+2. **Validation:** PhishGuard validates and normalizes the URL.
+3. **Feature Extraction:** The application examines URL structure and suspicious indicators.
+4. **Prediction:** The trained machine-learning model estimates the URL's class.
+5. **Explanation:** The result page displays the prediction and relevant suspicious patterns.
+6. **History:** The analysis is stored locally in SQLite with query strings and fragments removed.
 
-## Train with a real dataset
+PhishGuard does not fetch the submitted webpage, follow redirects, or execute the link.
 
-Put the CSV at `data/phishing_urls.csv` and run:
+## 🤖 Model Training and Dataset
 
-```powershell
-.\.venv\Scripts\Activate.ps1
-python train_model.py
-```
+PhishGuard compares Random Forest and Gradient Boosting classifiers using a grouped training, validation, and test workflow.
 
-Or specify a dataset path explicitly; this always takes precedence over the default dataset:
+The training pipeline:
+
+- Validates and cleans labeled URL records.
+- Removes duplicate normalized URLs where appropriate.
+- Groups related URLs by approximate registrable domain before splitting.
+- Selects a model using validation F1 score, with recall and accuracy as tie-breakers.
+- Evaluates the selected model on held-out test groups.
+
+### Dataset format
+
+A labeled CSV file must contain:
+
+| Column | Description |
+|---|---|
+| `url` | URL or hostname to analyze |
+| `label` | Legitimate (`0`) or phishing (`1`), including supported label names |
+
+To train using your own dataset:
 
 ```powershell
 python train_model.py --dataset "C:\path\to\labeled_urls.csv"
 ```
 
-The default command chooses `data/phishing_urls.csv` when it exists. Otherwise it prints a demonstration-only warning and uses `data/synthetic_urls.csv`. Explicit paths are never replaced by the synthetic fixture. Training creates ignored model files under `models/`; older or incompatible model artifacts must be retrained.
+The included `data/synthetic_urls.csv` is a small, hand-authored demonstration dataset. **Its results must not be presented as real-world model accuracy.** Use a reputable, documented, properly licensed dataset for meaningful evaluation.
 
-## Configuration and security
+## 🧪 Run Tests
 
-Configuration is read from environment variables; a local `.env` file is supported through `python-dotenv`. Start with `.env.example` and copy it to `.env` if you need custom settings. `.env` is ignored by Git.
+Activate your virtual environment and run:
 
-| Variable | Default | Purpose |
-|---|---|---|
-| `PHISHGUARD_SECRET_KEY` | Random per process | Flask session signing; a unique key of at least 32 characters is required for non-loopback binding |
-| `PHISHGUARD_HOST` | `127.0.0.1` | Bind address; non-loopback binding requires a configured secret |
-| `PHISHGUARD_PORT` | `5000` | Local server port |
-| `PHISHGUARD_COOKIE_SECURE` | `0` on localhost, `1` otherwise | Set to `1` when served over HTTPS; non-loopback binding refuses insecure cookies |
-| `PHISHGUARD_HISTORY_RETENTION_DAYS` | `90` | Delete older SQLite history rows during database initialization/access |
-| `PHISHGUARD_RATE_LIMIT_PER_MINUTE` | `30` | Per-source-IP analysis limit when bound beyond localhost |
+```powershell
+python -m pytest -q
+```
 
-CSRF tokens are generated per session and checked on every POST. Session cookies are HTTP-only and SameSite=Lax. Requests are limited to 4,096 bytes, and generic server errors do not disclose stack traces or filesystem details. The basic in-process rate limiter applies only when the configured bind address is not loopback; it is not a substitute for a production reverse proxy or WSGI deployment.
+The repository includes tests for configuration, database behavior, URL detection, feature extraction, web routes, and model training.
 
-URL analysis parses submitted text only. It does not resolve DNS, fetch pages, follow redirects, or execute links. SQLite history removes query parameters and fragments, which may contain tokens or personal data. History retention is configurable; clearing history removes stored analysis records. Existing history is preserved during schema migration; historical scores produced by the earlier blended formula are explicitly marked as legacy. The database remains local to the machine unless its files are deliberately shared.
+GitHub Actions is configured to run automated checks on supported Python versions.
 
-## Troubleshooting
+## 🔐 Privacy and Security
 
-- **Missing package:** activate `.venv` and run `python -m pip install -r requirements.txt`.
-- **No model / invalid model:** run `python train_model.py`; the saved schema and model must be generated together.
-- **Dataset missing:** place a CSV with `url` and `label` columns at `data/phishing_urls.csv`, or use the explicitly labeled synthetic demonstration data.
-- **Both classes/groups required:** include legitimate and phishing labels across at least three distinct registrable-domain groups per class.
-- **Port already in use:** set `PHISHGUARD_PORT` to an available local port before launching.
-- **Binding beyond localhost:** set `PHISHGUARD_SECRET_KEY` before configuring `PHISHGUARD_HOST` to a non-loopback address. Do not use Flask's development server as a production deployment.
+- Submitted URLs are analyzed from their text rather than by visiting their destinations.
+- Query strings and fragments are removed from stored history.
+- SQLite history remains local to the running installation.
+- The application includes CSRF checks, request-size limits, and other web security controls.
 
-## Continuous integration
+**Important:** Machine-learning systems can produce false positives and false negatives. A URL classified as legitimate may still be malicious, and a flagged URL may be legitimate. Do not enter sensitive information into an unfamiliar website based solely on this tool's result.
 
-GitHub Actions runs Pytest, `pip check`, and `pip-audit` on Windows with Python 3.11, 3.12, and 3.13 for pushes and pull requests.
+## 🚀 Future Improvements
 
-## Future enhancements
+- Evaluate performance using reputable real-world phishing datasets.
+- Improve domain grouping and model calibration.
+- Add additional model evaluation visualizations.
+- Expand automated security testing.
+- Explore deployment with a production-ready web server and secure hosting configuration.
 
-- Benchmark on a reputable, properly licensed, documented public dataset.
-- Add a verified public-suffix dataset for more accurate registrable-domain grouping.
-- Add model calibration and monitor drift using a held-out, representative dataset.
-- Add analyst review and privacy-preserving aggregate reporting.
+## 👨‍💻 Project Information
+
+**Project:** PhishGuard — Phishing URL Detection System  
+**Domain:** Cybersecurity and Machine Learning  
+**Purpose:** Educational and research demonstration
+
+## 📄 License
+
+Choose and add an appropriate open-source license before claiming that this project is licensed for reuse. Until then, check the repository's licensing terms before redistributing or modifying the project.
